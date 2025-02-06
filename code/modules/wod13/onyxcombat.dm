@@ -7,7 +7,7 @@
 	if(warform)
 		warform.end()
 
-	if(iskindred(src))
+	if(iskindred(src) || iscathayan(src) || isgarou(src))
 		SSmasquerade.dead_level = min(1000, SSmasquerade.dead_level+50)
 	else
 		if(istype(get_area(src), /area/vtm))
@@ -15,22 +15,32 @@
 			if(V.zone_type == "masquerade")
 				SSmasquerade.dead_level = max(0, SSmasquerade.dead_level-25)
 
+	if(masquerade <= 0 && !GLOB.canon_event)
+		var/datum/preferences/P = GLOB.preferences_datums[ckey(key)]
+		if(P)
+			P.reset_character()
+			P.reason_of_death = "Failed to stay alive after breaking Masquerade completely ([time2text(world.timeofday, "YYYY-MM-DD hh:mm:ss")])."
+
 	if(bloodhunted)
 		SSbloodhunt.hunted -= src
 		bloodhunted = FALSE
 		SSbloodhunt.update_shit()
-	var/witness_count
-	for(var/mob/living/carbon/human/npc/NEPIC in viewers(7, usr))
-		if(NEPIC && NEPIC.stat != DEAD)
-			witness_count++
-		if(witness_count > 1)
-			for(var/obj/item/police_radio/radio in GLOB.police_radios)
-				radio.announce_crime("murder", get_turf(src))
-			for(var/obj/item/p25radio/police/radio in GLOB.p25_radios)
-				if(radio.linked_network == "police")
+	if(istype(get_area(src), /area/vtm))
+		var/area/vtm/V = get_area(src)
+		if(V.zone_type == "masquerade")
+			var/witness_count
+			for(var/mob/living/carbon/human/npc/NEPIC in oviewers(7, usr))
+				if(NEPIC && NEPIC.stat != DEAD)
+					witness_count++
+			if(witness_count > 1)
+				for(var/obj/item/police_radio/radio in GLOB.police_radios)
 					radio.announce_crime("murder", get_turf(src))
+				for(var/obj/item/p25radio/police/radio in GLOB.p25_radios)
+					if(radio.linked_network == "police")
+						radio.announce_crime("murder", get_turf(src))
 	GLOB.masquerade_breakers_list -= src
 	GLOB.sabbatites -= src
+	GLOB.noddists -= src
 
 	//So upon death the corpse is filled with yin chi
 	yin_chi = min(max_yin_chi, yin_chi+yang_chi)
@@ -579,7 +589,7 @@
 				var/view_buff = min(14, get_a_perception(usr)+get_a_alertness(usr))
 				var/view_distance = round((actual_distance/15)*view_buff)
 				var/myangle = get_angle_raw(H.x, H.y, 0, 0, x, y, 0, 0)
-				var/time_to_animate = 5
+				var/time_to_animate = 3
 				animate(H.client, pixel_x = round(view_distance*sin(myangle)), pixel_y = round(view_distance*cos(myangle)), time = time_to_animate)
 
 /mob/living/carbon/Move(atom/newloc, direct, glide_size_override)
@@ -638,11 +648,14 @@
 								HUY.put_in_active_hand(item_to_pick)
 							return
 				else
-					if(isturf(HUY.loc))
+					if(isturf(HUY.loc) && get_a_perception(HUY)+get_a_alertness(HUY) >= 4)
 						HUY.binocling = !HUY.binocling
 						if(!HUY.binocling)
+							to_chat(HUY, "<span class='notice'>You are no more looking far away...</span>")
 							HUY.client.pixel_x = 0
 							HUY.client.pixel_y = 0
+						else
+							to_chat(HUY, "<span class='notice'>You are looking far away.</span>")
 		if(HUY.warform)
 			if(istype(src, /obj) || istype(src, /mob))
 				if(Adjacent(HUY.warform.warform))
@@ -767,7 +780,7 @@
 	update_blood_hud()
 	update_zone_hud()
 	update_rage_hud()
-	update_shadow()
+//	update_shadow()
 	handle_vampire_music()
 	update_auspex_hud()
 	if(warrant)
@@ -825,7 +838,8 @@
 /mob/living/proc/update_blood_hud()
 	if(!client || !hud_used)
 		return
-	maxbloodpool = get_gen_bloodpool(generation)
+	maxbloodpool = get_gen_bloodpool(generation)-cursed_bloodpool
+	bloodpool = min(maxbloodpool, bloodpool)
 	if(hud_used.blood_icon)
 		var/emm = round((bloodpool/maxbloodpool)*10)
 		if(emm > 10)

@@ -37,7 +37,7 @@
 	GLOB.npc_list += src
 	GLOB.alive_npc_list += src
 	organschecklist = length(get_all_organs())
-//	add_movespeed_modifier(/datum/movespeed_modifier/npc)
+	add_movespeed_modifier(/datum/movespeed_modifier/npc)
 
 /mob/living/carbon/human/npc/death()
 	GLOB.alive_npc_list -= src
@@ -221,7 +221,15 @@
 		return FALSE
 	return TRUE
 
+/mob/living/carbon/human/npc
+	var/client_cleaned = FALSE
+
 /mob/living/carbon/human/npc/proc/handle_automated_movement()
+	if(client)
+		if(!client_cleaned)
+			remove_movespeed_modifier(/datum/movespeed_modifier/npc)
+			client_cleaned = TRUE
+		return
 	if(CheckMove())
 		return
 	if(presence_master && stat < DEAD)

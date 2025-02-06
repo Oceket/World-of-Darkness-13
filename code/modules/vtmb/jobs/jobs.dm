@@ -1,5 +1,5 @@
 /datum/job
-	var/experience_addition = 1
+	var/experience_addition = 0
 
 /datum/outfit/job/post_equip(mob/living/carbon/human/H)
 	. = ..()
@@ -12,9 +12,15 @@
 					H.bank_id = caard.account.bank_id
 					caard.account.account_owner = H.true_real_name
 					caard.has_checked = TRUE
+		var/obj/item/passport/pass_port = locate() in b.contents
+		if(pass_port)
+			pass_port.owner_name = H.real_name
+			pass_port.owner_age = H.age
+			pass_port.owner_gender = H.gender
 
-	for(var/i in 1 to get_a_manipulation(H)+get_a_finance(H))
-		H.equip_to_slot_or_del(new /obj/item/stack/dollar/hundred(H),ITEM_SLOT_BACKPACK, TRUE)
+	if(!hobo_job)
+		for(var/i in 1 to get_a_manipulation(H)+get_a_finance(H))
+			H.equip_to_slot_or_del(new /obj/item/stack/dollar/hundred(H),ITEM_SLOT_BACKPACK, TRUE)
 
 //ID
 
@@ -404,7 +410,7 @@
 		if(2)
 			var/datum/objective/money/money_objective = new
 			money_objective.owner = owner
-			money_objective.amount = rand(500, 3000)
+			money_objective.amount = rand(3000, 5000)
 			objectives += money_objective
 			money_objective.update_explanation_text()
 		if(3)
@@ -429,7 +435,7 @@
 			else
 				var/datum/objective/money/money_objective = new
 				money_objective.owner = owner
-				money_objective.amount = rand(300, 1000)
+				money_objective.amount = rand(3000, 5000)
 				objectives += money_objective
 				money_objective.update_explanation_text()
 		if(4)

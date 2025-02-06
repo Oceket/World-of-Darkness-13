@@ -4,9 +4,9 @@ GLOBAL_LIST_EMPTY(ghost_images_simple) //this is a list of all ghost images as t
 GLOBAL_VAR_INIT(observer_default_invisibility, INVISIBILITY_OBSERVER)
 
 var/list/CMNoir = list(0.3,0.3,0.3,0,\
-			 		   0.3,0.3,0.3,0,\
-					   0.3,0.3,0.3,0,\
-					   0.0,0.0,0.0,1,)// [ChillRaccoon] - more about "color matrix" you can read in BYOND documentation
+						0.3,0.3,0.3,0,\
+						0.3,0.3,0.3,0,\
+						0.0,0.0,0.0,1,)// [ChillRaccoon] - more about "color matrix" you can read in BYOND documentation
 
 /mob/dead/observer
 	name = "ghost"
@@ -72,11 +72,11 @@ var/list/CMNoir = list(0.3,0.3,0.3,0,\
 	var/aghosted = FALSE
 	var/auspex_ghosted = FALSE
 
-/mob/dead/observer/Login()
-	..()
-	if(client && !aghosted)
-		animate(client, color = CMNoir, time = 30)
-		client.color = CMNoir
+//mob/dead/observer/Login()
+//	..()
+//	if(client && !aghosted)
+//		animate(client, color = CMNoir, time = 30)
+//		client.color = CMNoir
 //There was observer music here. It's gone now.
 
 /mob/dead/observer/Initialize()
@@ -376,7 +376,7 @@ This is the proc mobs get to turn into a ghost. Forked from ghostize due to comp
 
 /mob/dead/observer/Move(NewLoc, direct, glide_size_override = 32)
 	..()
-/*
+
 	if(updatedir)
 		setDir(direct)//only update dir if we actually need it, so overlays won't spin on base sprites that don't have directions of their own
 	var/oldloc = loc
@@ -400,7 +400,7 @@ This is the proc mobs get to turn into a ghost. Forked from ghostize due to comp
 			x--
 
 	Moved(oldloc, direct)
-*/
+
 /mob/dead/observer/verb/reenter_corpse()
 	set category = "Ghost"
 	set name = "Re-enter Corpse"

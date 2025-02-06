@@ -132,11 +132,14 @@ SUBSYSTEM_DEF(woddices)
 	var/Occult = 0
 
 	var/fortitude_bonus = 0
+	var/passive_fortitude = 0
 	var/potence_bonus = 0
 	var/visceratika_bonus = 0
 	var/bloodshield_bonus = 0
 	var/lasombra_shield = 0
 	var/tzimisce_bonus = 0
+
+	var/diff_curse = 0
 
 /datum/attributes/proc/randomize()
 	strength = rand(1, 3)
@@ -171,7 +174,7 @@ SUBSYSTEM_DEF(woddices)
 
 /proc/get_fortitude_dices(mob/living/Living)
 	if(Living.attributes)
-		return Living.attributes.fortitude_bonus
+		return Living.attributes.fortitude_bonus+Living.attributes.passive_fortitude
 	else
 		return 0
 
@@ -349,27 +352,66 @@ SUBSYSTEM_DEF(woddices)
 	else
 		return 3
 
+/proc/get_dice_image(input, diff)
+	var/dat = ""
+	var/span_end = ""
+	if((input >= diff && input != 1) || input == 10)
+		dat += "<span class='nicegreen'>"
+		span_end = "</span>"
+	if(input == 1)
+		dat += "<span class='danger'>"
+		span_end = "</span>"
+	switch(input)
+		if(1)
+			dat += "❶"
+		if(2)
+			dat += "❷"
+		if(3)
+			dat += "❸"
+		if(4)
+			dat += "❹"
+		if(5)
+			dat += "❺"
+		if(6)
+			dat += "❻"
+		if(7)
+			dat += "❼"
+		if(8)
+			dat += "❽"
+		if(9)
+			dat += "❾"
+		if(10)
+			dat += "❿"
+		else
+			dat += "⓿"
+	dat += span_end
+	return dat
+
 /proc/secret_vampireroll(var/dices_num = 1, var/hardness = 1, var/mob/living/rollperformer, var/stealthy = FALSE)
 	if(!dices_num)
-		create_number_on_mob(rollperformer, "#646464", "0")
-		to_chat(rollperformer, "<b>No successes!</b>")
+		if(!stealthy)
+			create_number_on_mob(rollperformer, "#646464", "0")
+			to_chat(rollperformer, "<b>No dicepool!</b>")
 		return 0
-	hardness = clamp(hardness, 1, 10)
+	hardness = clamp(hardness+rollperformer.attributes.diff_curse, 1, 10)
 	var/dices_decap = rollperformer.get_health_difficulty()
 	dices_num = max(1, dices_num-dices_decap)
 	var/wins = 0
 	var/brokes = 0
+	var/result = ""
 	for(var/i in 1 to dices_num)
 		var/roll = rand(1, 10)
 		if(roll == 1)
 			brokes += 1
-		else if(roll >= hardness)
+		else if(roll >= hardness || roll == 10)
 			wins += 1
+		result += get_dice_image(roll, hardness)
 	wins = wins-brokes
+	if(!stealthy)
+		to_chat(rollperformer, result)
 	if(wins < 0)
 		if(!stealthy)
 			create_number_on_mob(rollperformer, "#ff0000", "Botch!")
-		to_chat(rollperformer, "<span class='danger'>Botch!</span>")
 		return -1
 	if(wins == 0)
 		if(!stealthy)
@@ -395,10 +437,6 @@ SUBSYSTEM_DEF(woddices)
 	if(wins >= 7)
 		if(!stealthy)
 			create_number_on_mob(rollperformer, "#b200ff", "7+")
-	if(wins)
-		to_chat(rollperformer, "<span class='nicegreen'><b>[wins] successes!</b></span>")
-	else
-		to_chat(rollperformer, "<b>No successes!</b>")
 	return wins
 
 /datum/action/aboutme
@@ -417,6 +455,9 @@ SUBSYSTEM_DEF(woddices)
 				background-color: #090909; color: white;
 			}
 
+			<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+			<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
 			</style>
 			"}
 		dat += "<center><h2>Memories</h2><BR></center>"
@@ -431,12 +472,14 @@ SUBSYSTEM_DEF(woddices)
 			if(iskindred(host))
 				if(host.clane)
 					dat += " the [host.clane.name]"
-				if(!host.clane)
+				else
 					dat += " the caitiff"
 			else if(isgarou(host) || iswerewolf(host))
 				dat += " the garou"
 			else if(iscathayan(host))
 				dat += " the kuei-jin"
+			else if(isghoul(host))
+				dat += " the ghoul"
 			else
 				dat += " the mortal"
 

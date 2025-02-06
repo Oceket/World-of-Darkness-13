@@ -8,6 +8,49 @@
 
 /obj/item
 	var/masquerade_violating = FALSE
+	var/attack_diff_override = 0
+
+/obj/item/kastet
+	icon_state = "kastet"
+	name = "brass knuckles"
+	desc = "Lethaly efficient brawl weapon."
+	force = 20
+	attack_diff_override = 4
+	icon = 'code/modules/wod13/weapons.dmi'
+	lefthand_file = 'code/modules/wod13/righthand.dmi'
+	righthand_file = 'code/modules/wod13/lefthand.dmi'
+	worn_icon = 'code/modules/wod13/worn.dmi'
+	onflooricon = 'code/modules/wod13/onfloor.dmi'
+	cost = 25
+
+/obj/item/kastet/spiked
+	icon_state = "kastet_s"
+	name = "brass knuckles"
+	force = 35
+	attack_diff_override = 5
+	sharpness = SHARP_EDGED
+
+/obj/item/melee/vampirearms/sledgehammer
+	icon_state = "sledgehammer"
+	name = "sledgehammer"
+	desc = "Truly, the weapon of a madman. Who would think to fight sledge with an hammer?"
+	icon = 'code/modules/wod13/weapons.dmi'
+	force = 50
+	throwforce = 20
+	w_class = WEIGHT_CLASS_BULKY
+	attack_verb_continuous = list("attacks", "bumps", "squeashes", "tears", "hits", "bonks")
+	attack_verb_simple = list("attack", "bump", "squeash", "tear", "hit", "bonk")
+	hitsound = 'sound/weapons/bladeslice.ogg'
+	sharpness = SHARP_EDGED
+	max_integrity = 200
+	armor = list(MELEE = 0, BULLET = 0, LASER = 0, ENERGY = 0, BOMB = 0, BIO = 0, RAD = 0, FIRE = 100, ACID = 30)
+	resistance_flags = FIRE_PROOF
+	wound_bonus = 25
+	bare_wound_bonus = 20
+	armour_penetration = 0
+	block_chance = 0
+	pixel_w = -8
+	masquerade_violating = FALSE
 
 /obj/item/melee/vampirearms/fireaxe
 	icon = 'code/modules/wod13/48x32weapons.dmi'
@@ -25,7 +68,7 @@
 	max_integrity = 200
 	armor = list(MELEE = 0, BULLET = 0, LASER = 0, ENERGY = 0, BOMB = 0, BIO = 0, RAD = 0, FIRE = 100, ACID = 30)
 	resistance_flags = FIRE_PROOF
-	wound_bonus = -15
+	wound_bonus = 25
 	bare_wound_bonus = 20
 	armour_penetration = 0
 	block_chance = 15
@@ -370,35 +413,22 @@
 	name = "claws"
 	icon_state = "gangrel"
 	w_class = WEIGHT_CLASS_BULKY
-	force = 6
+	force = 20
+	damtype = CLONE
 	armour_penetration = 0	//It's magical damage
 	block_chance = 20
 	item_flags = DROPDEL
 	masquerade_violating = TRUE
 	is_iron = FALSE
 
-/obj/item/melee/vampirearms/knife/gangrel/afterattack(atom/target, mob/living/carbon/user, proximity)
-	if(!proximity)
-		return
-	if(isliving(target))
-		var/mob/living/L = target
-		L.apply_damage(30, CLONE)
-
 /obj/item/melee/vampirearms/knife/gangrel/lasombra
 	name = "shadow tentacle"
-	force = 7
+	force = 20
+	damtype = CLONE
 	armour_penetration = 0
 	block_chance = 0
 	icon_state = "lasombra"
 	masquerade_violating = TRUE
-
-/obj/item/melee/vampirearms/knife/gangrel/lasombra/afterattack(atom/target, mob/living/carbon/user, proximity)
-	if(!proximity)
-		return
-	if(isliving(target))
-		var/mob/living/L = target
-		L.apply_damage(16, CLONE)
-		L.apply_damage(7, BURN)
 
 /obj/item/melee/touch_attack/quietus
 	name = "\improper poison touch"
@@ -414,9 +444,8 @@
 		return
 	if(isliving(target))
 		var/mob/living/L = target
-		L.adjustFireLoss(10)
 		L.AdjustKnockdown(3 SECONDS)
-		L.adjustStaminaLoss(50)
+		L.adjustStaminaLoss(25)
 	return ..()
 
 /obj/item/melee/touch_attack/werewolf
@@ -434,7 +463,7 @@
 	if(isliving(target))
 		var/mob/living/L = target
 		L.AdjustKnockdown(4 SECONDS)
-		L.adjustStaminaLoss(50)
+		L.adjustStaminaLoss(25)
 		L.Immobilize(3 SECONDS)
 		if(L.body_position != LYING_DOWN)
 			L.toggle_resting()
@@ -453,7 +482,7 @@
 	if(istype(I, /obj/item/quietus_upgrade))
 		if(!quieted)
 			quieted = TRUE
-			armour_penetration = min(100, armour_penetration+30)
+//			armour_penetration = min(100, armour_penetration+30)
 			force += 20
 			color = "#72b27c"
 			qdel(I)

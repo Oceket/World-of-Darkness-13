@@ -76,14 +76,9 @@
 /mob/living/carbon/adjustFireLoss(amount, updating_health = TRUE, forced = FALSE, required_status)
 	if(!forced && (status_flags & GODMODE))
 		return FALSE
-	if(iskindred(src))
+	if(iskindred(src) || iscathayan(src))
 		adjustCloneLoss(amount, updating_health, forced)
 		return amount
-	if(iscathayan(src))
-		var/mob/living/carbon/human/Humhuman = src
-		if(!Humhuman.check_kuei_jin_alive())
-			adjustCloneLoss(amount, updating_health, forced)
-			return amount
 	if(amount > 0)
 		take_overall_damage(0, amount, 0, updating_health, required_status)
 	else
@@ -223,6 +218,9 @@
 	var/list/obj/item/bodypart/parts = get_damageable_bodyparts(required_status)
 	if(!parts.len)
 		return
+	if((iskindred(src) || iscathayan(src)) && burn)
+		adjustCloneLoss(burn, TRUE)
+		burn = 0
 	var/obj/item/bodypart/picked = pick(parts)
 	if(picked.receive_damage(brute, burn, stamina,check_armor ? run_armor_check(picked, AGGRAVATED) : FALSE, wound_bonus = wound_bonus, bare_wound_bonus = bare_wound_bonus, sharpness = sharpness))
 		update_damage_overlays()

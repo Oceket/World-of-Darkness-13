@@ -1453,11 +1453,12 @@ GLOBAL_LIST_EMPTY(selectable_races)
 			target.dismembering_strike(user, affecting.body_zone)
 
 		if(atk_verb == ATTACK_EFFECT_KICK)//kicks deal 1.5x raw damage
-			target.apply_damage(damage*1.5, user.dna.species.attack_type, affecting, armor_block)
+			target.apply_damage(damage, user.dna.species.attack_type, affecting, armor_block)
+			target.apply_damage(damage, STAMINA, affecting, armor_block)
 			log_combat(user, target, "kicked")
 		else//other attacks deal full raw damage + 1.5x in stamina damage
 			target.apply_damage(damage, user.dna.species.attack_type, affecting, armor_block)
-			target.apply_damage(damage*1.5, STAMINA, affecting, armor_block)
+//			target.apply_damage(damage, STAMINA, affecting, armor_block)
 			log_combat(user, target, "punched")
 
 		if((target.stat != DEAD) && damage >= user.dna.species.punchstunthreshold)
@@ -1542,7 +1543,11 @@ GLOBAL_LIST_EMPTY(selectable_races)
 		add_hard = 1
 	if(user.zone_selected == BODY_ZONE_PRECISE_EYES || user.zone_selected == BODY_ZONE_PRECISE_MOUTH)
 		add_hard = 2
-	var/modifikator = secret_vampireroll(get_a_strength(user)+get_a_melee(user)+get_potence_dices(user), 6+add_hard, user)
+	var/modifikator
+	if(I.attack_diff_override > 0)
+		modifikator = secret_vampireroll(get_a_strength(user)+get_a_melee(user)+get_potence_dices(user), I.attack_diff_override, user)
+	else
+		modifikator = secret_vampireroll(get_a_strength(user)+get_a_melee(user)+get_potence_dices(user), 6+add_hard, user)
 	if(modifikator == -1)
 		H = user
 		modifikator = 3
@@ -1683,13 +1688,17 @@ GLOBAL_LIST_EMPTY(selectable_races)
 			else//no bodypart, we deal damage with a more general method.
 				H.adjustBruteLoss(damage_amount)
 		if(BURN)
-			H.damageoverlaytemp = 20
-			var/damage_amount = forced ? damage : damage * hit_percent * burnmod * H.physiology.burn_mod
-			if(BP)
-				if(BP.receive_damage(0, damage_amount, wound_bonus = wound_bonus, bare_wound_bonus = bare_wound_bonus, sharpness = sharpness))
-					H.update_damage_overlays()
+			if(iskindred(H) || iscathayan(H))
+				var/damage_amount = forced ? damage : damage * hit_percent * H.physiology.burn_mod
+				H.adjustCloneLoss(damage_amount)
 			else
-				H.adjustFireLoss(damage_amount)
+				H.damageoverlaytemp = 20
+				var/damage_amount = forced ? damage : damage * hit_percent * burnmod * H.physiology.burn_mod
+				if(BP)
+					if(BP.receive_damage(0, damage_amount, wound_bonus = wound_bonus, bare_wound_bonus = bare_wound_bonus, sharpness = sharpness))
+						H.update_damage_overlays()
+				else
+					H.adjustFireLoss(damage_amount)
 		if(TOX)
 			var/damage_amount = forced ? damage : damage * hit_percent * H.physiology.tox_mod
 			H.adjustToxLoss(damage_amount)

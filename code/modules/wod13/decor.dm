@@ -252,12 +252,18 @@
 			if(V.upper)
 				icon_state = "[initial(icon_state)]-snow"
 
+/obj/structure/trashcan
+	var/last_investigation = 0
+
 /obj/structure/trashcan/attack_hand(mob/living/user)
 	. = ..()
+	if(last_investigation > world.time)
+		return
 	if(!searching)
 		searching = TRUE
 		if(do_mob(user, src, 20 SECONDS))
 			searching = FALSE
+			last_investigation = world.time+30 SECONDS
 			var/result = secret_vampireroll(get_a_perception(user)+get_a_investigation(user), 6, user)
 			switch(result)
 				if(-1)
@@ -795,10 +801,10 @@
 				return
 			V.last_extracted = world.time
 			if(!iskindred(src))
-				new /obj/item/drinkable_bloodpack(get_step(V, SOUTH))
+				new /obj/item/drinkable_bloodpack/full(get_step(V, SOUTH))
 				bloodpool = max(0, bloodpool-2)
 			else
-				new /obj/item/drinkable_bloodpack/vitae(get_step(V, SOUTH))
+				new /obj/item/drinkable_bloodpack/full/vitae(get_step(V, SOUTH))
 				bloodpool = max(0, bloodpool-4)
 
 
@@ -1059,29 +1065,33 @@
 		obj_flags &= ~IN_USE
 		user.pixel_y = 0
 		icon_state = initial(icon_state)
-		var/difficulties = 0
-		for(var/obj/item/clothing/C in user)
-			if(C)
-				difficulties += 1
-		difficulties = round(difficulties/2)
-		if(difficulties)
-			to_chat(user, "<span class='warning'>Clothes are making you worse at dancing... Take them off.")
-		var/result = secret_vampireroll(get_a_appearance(user)+get_a_empathy(user), 6+difficulties, user)
-		if(result == -1)
-			for(var/mob/living/carbon/human/npc/NPC in oviewers(2, user))
-				if(NPC)
-					if(NPC.CheckMove())
-						NPC.RealisticSay(pick("Фуу!", "Позорище!", "Убирайся!"))
-		if(result >= 3)
-			for(var/mob/living/carbon/human/npc/NPC in oviewers(2, user))
-				if(NPC)
-					if(NPC.CheckMove())
-						if(prob(50))
-							NPC.RealisticSay(pick("Так держать!", "Красотища...", "Детка, я твой фанат!"))
-						else
-							NPC.emote("clap")
-			var/obj/item/stack/dollar/fifty/F = new get_turf(user)
-			user.put_in_active_hand(F)
+		if(!isnpc(user))
+			var/difficulties = 0
+			for(var/obj/item/clothing/C in user)
+				if(C)
+					difficulties += 1
+			difficulties = round(difficulties/2)
+			if(difficulties)
+				to_chat(user, "<span class='warning'>Clothes are making you worse at dancing... Take them off.")
+			var/result = secret_vampireroll(get_a_appearance(user)+get_a_empathy(user), 6+difficulties, user)
+			if(result == -1)
+				for(var/mob/living/carbon/human/npc/NPC in oviewers(2, user))
+					if(NPC)
+						if(NPC.CheckMove())
+							NPC.RealisticSay(pick("Фуу!", "Позорище!", "Убирайся!"))
+			if(result >= 3)
+				var/i_have_someone_to_fuck = FALSE
+				for(var/mob/living/carbon/human/npc/NPC in oviewers(2, user))
+					if(NPC)
+						if(NPC.CheckMove())
+							i_have_someone_to_fuck = TRUE
+							if(prob(50))
+								NPC.RealisticSay(pick("Так держать!", "Красотища...", "Детка, я твой фанат!"))
+							else
+								NPC.emote("clap")
+				if(i_have_someone_to_fuck)
+					var/obj/item/stack/dollar/ten/F = new get_turf(user)
+					user.put_in_active_hand(F)
 
 /obj/structure/pole/proc/animatepole(mob/living/user)
 	return

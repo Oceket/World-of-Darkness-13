@@ -12,7 +12,7 @@ GLOBAL_LIST_INIT(command_positions, list(
 	"Prince",
 	"Seneschal",
 	"Sheriff",
-	"Scourge"))
+	"Hound"))
 
 GLOBAL_LIST_INIT(camarilla_council_positions, list(
     "Primogen Malkavian",
@@ -34,6 +34,7 @@ GLOBAL_LIST_INIT(anarch_positions, list(
 GLOBAL_LIST_INIT(citizen_positions, list(
 	"Citizen",
 	"Elder",
+	"Hobo"
 ))
 
 GLOBAL_LIST_INIT(police_positions, list(
